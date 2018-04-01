@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>MP3播放器</title>
+	<script src="baidu.jquery.js"></script>
+<style>
+	.content {
+		position: relative;float: left;
+		width:86%;height:300px;overflow:scroll; border: 1px solid #ccc;
+	}
+	.content .current_content{
+		/*position: relative;*/
+		margin-top: 20px;
+	}
+	.main .left {
+		float: left;width: 10%;height:300px;overflow:scroll; border: 1px solid #ccc;
+	}
+	.main .left span{
+		display: block;margin-left: 10px;line-height: 26px;
+	}
+	.main .left .current{
+		color: red;
+	}
+</style>
+</head>
+<body>
+	<div id="video" style="display: none">
+		<video id="myVideo" src=""></video>
+	</div>
+	<div class="main">
+		<div id="content" class="content">
+		
+		</div>
+	<div class="left" id="mulu">
+		
+	</div>
+	</div>
+<div class="input_content">
+	<textarea name="input_content" id="input_content" cols="100" rows="10"></textarea>
+</div>
+	
+	<input type="button" id='load' value="加载">
+	<input type="button" id='play' value="开始">
+	<input type="button" id='pause' value="暂停">
+	音量调节:<input type=range id="range" min=1 max=11 step=1 name=tap value="1">
+	<script>
+	var yuyin_set={};//保存语音设置
+	var content_obj;//内容div对象
+	var current_content_obj;//当前内容div对象
+	var content_arr=[];//所有的文章去空格的数组
+	var all_content='';//所有的文章内容
+	var next_str='';//获取的内容
+	var monit_time;//监控时间
+	var page=1; //第几页
+window.onload=function(){
+	//获取文章内容
+	// get_article();
+
+	// alert(123);
+	// load_mp3(page,mp3_play);
+}
+
+	// 加载MP3
+	function load_mp3(page,fun1){
+		$.get('get_data.php?page_num='+page,fun1);
+	}
+	// 执行MP3播放
+	function mp3_play(str){
+		// console.log(str);
+		if(!str)return ;
+		$("#content").html(str);
+		x.src= url+str;
+		x.load();
+		x.play()
+	}
+
+	var url = 'http://tsn.baidu.com/text2audio?lan=zh&cuid=00-E0-4C-50-C3-72&ctp=1&tok=24.24751e96cff907eda7e2fa37b041a76f.2592000.1523189904.282335-9962968';
+
+		var x2 = document.createElement("VIDEO");
+		var x = document.getElementById("myVideo");
+		// x.src="yi.mp3";
+		x.volume=0.8;
+		x.autoplay=false;
+		x2.autoplay=false;
+		x.onplay=function(){
+			// start_monit();//开始播放时间监控
+		}
+		x.onpause=function(){
+			// alert('pause');
+		}
+		x.onended=function(x1){
+			// this.src=url+'以其人之道，还治其人之身”，具体引申开来，也就是以牙还牙、以谎治谎、以毒攻毒、以黑反黑等。它是人们常用来对付对方的一种反击方法，恰当地使用它不失为一种应变之道。下面是以谎治谎之术在军事中的应用，将其借来用于处世中同样也很实用。';
+			// this.play();
+			// page++;
+			// load_mp3(page,mp3_play);
+			// x.src=x2.src;
+			// $("#content").html(next_str);
+			// x.play()
+			end_redo_mp3();//读完在执行
+		}
+		// x.play();
+		var paly = document.getElementById("play");
+		var pause = document.getElementById("pause");
+		play.onclick=function(){
+			x.play();
+		}
+		pause.onclick=function(){
+			x.pause();
+		}
+
+		// 监控currentTime 和 duration
+		function monit_do(){
+			if(x.duration-x.currentTime <3)
+			{
+				// page++;
+				load_mp3(page+1,function(str){
+					next_str = str;
+					x2.src= url+str;
+				});
+				console.log(3);
+				window.clearInterval(monit_time);
+			}
+		}
+		// var tt = SetInterval('monit_time',1);
+		// var monit_time=self.setInterval("monit_time()",1000)
+		function start_monit(){
+			monit_time=self.setInterval("monit_do()",1000)
+		}
+		// 获取所有的文章内容
+		function get_article(){
+			$.get('get_article.php',function(data){
+				if(data){
+					all_content=data;
+					content_obj=$("#content");
+					content_obj.html(data);
+					content_to_array();//把内容转为数组
+
+				}
+			});
+		}
+		// 获取本地的文章内容
+		function get_local_article(data){
+					all_content=data;
+					content_obj=$("#content");
+					content_obj.html(data);
+					content_to_array();//把内容转为数组
+
+		}
+
+		//播放MP3
+		function bofang_mp3(){
+			var txt = content_arr[page-1];
+			if(txt){
+				bofang_mp3_do(txt);
+				// 内容变颜色
+				change_color(txt);
+				change_position();//改变当前位置
+				current_num_style();//改变目录
+			}
+		}
+		// 执行播放
+		function bofang_mp3_do(txt){
+			var url_param = add_yuyin_set(url);
+			x.src=url_param+"&tex="+txt;
+			x.play();
+		}
+		// 读完在执行
+		function end_redo_mp3(){
+			page++;
+			bofang_mp3();
+		}
+		// 改变颜色
+		function change_color(txt){
+			var txt=txt;
+			var reg=new RegExp(txt,"g"); 
+			ret=all_content.replace(reg,"<span class='current_content' style='color:red;'>"+txt+"</span>");
+				content_obj .html(ret);
+		}
+		// 改变span 当前的位置
+		function change_position(){
+			current_content_obj=content_obj.find('span')[0];
+			content_obj[0].scrollTop=current_content_obj.offsetTop-100;
+		}
+		// 显示播放第几短 并改变颜色
+		function current_num_style(){
+			var tmp_str='';
+			 for(var i=0;i<content_arr.length;i++)
+			 {
+			 	if(page==i+1){
+			 		tmp_str+="<span class='current' onclick=jump_num_page("+(i+1)+")>第"+(i+1)+"节</span>";
+			 	}else{
+			 		tmp_str+="<span onclick=jump_num_page("+(i+1)+")>第"+(i+1)+"节</span>";
+			 	}
+			 }
+			 var mulu_obj=$("#mulu");
+			 mulu_obj.html(tmp_str);
+			 // 改变目录位置
+			 mulu_obj[0].scrollTop=mulu_obj.find(".current")[0].offsetTop-100;
+		}
+		// 点击目录跳转
+		function jump_num_page(page_num){
+			page=page_num;
+			bofang_mp3();
+		}
+		// 添加语音设置
+		function add_yuyin_set(url){
+			for(var i in yuyin_set) {//不使用过滤
+				url += "&"+i+"="+yuyin_set[i];
+   			 }  
+    		return url;
+		}
+		// 把内容转为数组
+		function content_to_array(){
+			var content = all_content.substr(10,10);
+			content = all_content.split("\n");
+			content_arr=qu_kong(content);
+			bofang_mp3();//播放MP3
+		}
+
+
+		// 数组去空
+		function qu_kong(urls_list_org){
+			 var urls_list= new Array();
+			 //url去空
+			 for(var i=0;i<urls_list_org.length;i++)
+			 {
+			 	//正则去空格
+  				urls_list_org[i]=urls_list_org[i].replace(/(^\s+)|(\s+$)/g,"");
+		       if(urls_list_org[i] != '')
+		      {
+		          //加入新数组
+		           urls_list.push(urls_list_org[i]); 
+		      }
+			 }
+			 return urls_list;
+		}
+
+
+		$(document).ready(function(){
+
+			// 调节音量
+			$("#range").bind('change',function(){
+				var val = (this.value-1)/10;
+				x.volume=val;
+				// console.log(val);
+			}).val(x.volume*10+1);
+			// 加载textarea 里的内容
+			$("#load").bind('click',function(){
+				var tem_content = $("#input_content").val();
+				// alert(tem_content);
+				get_local_article(tem_content);
+			});
+
+
+		});
+	</script>
+
+	<div class="set_yuying" id="set">
+		语速: <input type=range min=1 max=11 step=1 name='yusu'>
+		音调: <input type=range min=1 max=11 step=1 name='yindiao'><br />
+		音量: <input type=range min=1 max=11 step=1 name='yinliang' />
+		发音: <select name="fayin" id="">
+			<option value="0">女声</option>
+			<option value="1">男声</option>
+			<option value="3">度逍遥</option>
+			<option value="4">度丫丫</option>
+		</select>
+	</div>
+	<script>
+		$(document).ready(function(){
+			$('#set input').bind('change',function(){
+				var name = $(this).attr('name');
+				if(name=='yusu')
+					yuyin_set.spd=this.value;
+				else if(name=='yindiao')
+					yuyin_set.pit=this.value;
+				else if(name=='yinliang')
+					yuyin_set.vol=this.value;	
+				// console.log(this.value,name);
+			});
+			$('#set select').bind('change',function(){
+				yuyin_set.per=this.value;
+				// console.log(this.value,name);
+			});
+	});
+	</script>
+</body>
+</html>
+
+
+
+
+
+<!-- 
+参数	可需	描述
+tex	必填	合成的文本，使用UTF-8编码，请注意文本长度必须小于1024字节
+lan	必填	语言选择,填写zh
+tok	必填	开放平台获取到的开发者 access_token
+ctp	必填	客户端类型选择，web端填写1
+cuid	必填	用户唯一标识，用来区分用户，填写机器 MAC 地址或 IMEI 码，长度为60以内
+spd	选填	语速，取值0-9，默认为5中语速
+pit	选填	音调，取值0-9，默认为5中语调
+vol	选填	音量，取值0-9，默认为5中音量
+per	选填	发音人选择, 0为女声，1为男声，3为情感合成-度逍遥，4为情感合成-度丫丫，默认为普通女声 -->
